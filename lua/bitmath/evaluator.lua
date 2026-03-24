@@ -57,11 +57,7 @@ function M.evaluate(node)
 	end
 
 	if node.type == "LiteralNode" then
-		local val = tonumber(node.value)
-		if not val then
-			error("Erro de Execução: Literal inválido '" .. tostring(node.value) .. "'")
-		end
-		return BitNum.new(val)
+		return BitNum.new(node.value, node.explicit_cardinality)
 	elseif node.type == "IdentifierNode" then
 		local val = M.variables[node.name]
 		if not val then

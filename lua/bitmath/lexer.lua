@@ -59,7 +59,15 @@ function M.tokenize(input)
 			while pos <= len and is_digit(current()) do
 				advance()
 			end
-			table.insert(tokens, { type = M.TokenType.NUMBER, value = input:sub(start_pos, pos - 1) })
+			if current() == "b" then
+				advance()
+				while pos <= len and (current() == "0" or current() == "1") do
+					advance()
+				end
+				table.insert(tokens, { type = M.TokenType.NUMBER, value = input:sub(start_pos, pos - 1) })
+			else
+				table.insert(tokens, { type = M.TokenType.NUMBER, value = input:sub(start_pos, pos - 1) })
+			end
 		elseif c == "(" then
 			table.insert(tokens, { type = M.TokenType.LPAREN, value = "(" })
 			advance()
