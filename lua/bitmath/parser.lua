@@ -1,6 +1,9 @@
 local lexer = require("bitmath.lexer")
+local M = {}
+
 local Parser = {}
 Parser.__index = Parser
+
 function Parser.new(tokens)
 	local self = setmetatable({}, Parser)
 	self.tokens = tokens
@@ -8,12 +11,14 @@ function Parser.new(tokens)
 	self.current_token = self.tokens[self.pos]
 	return self
 end
+
 function Parser:advance()
 	if self.current_token.type ~= lexer.TokenType.EOF then
 		self.pos = self.pos + 1
 		self.current_token = self.tokens[self.pos]
 	end
 end
+
 function Parser:eat(expected_type)
 	if self.current_token.type == expected_type then
 		local token = self.current_token
@@ -23,6 +28,7 @@ function Parser:eat(expected_type)
 		error("Erro de Sintaxe: Esperado " .. expected_type .. ", mas recebido " .. self.current_token.type)
 	end
 end
+
 function Parser:parse_primary()
 	local token = self.current_token
 	if token.type == lexer.TokenType.NUMBER then
@@ -38,6 +44,8 @@ function Parser:parse_primary()
 		return node
 	end
 	error("Erro de Sintaxe: Token inesperado '" .. token.value .. "'")
+end
+
 function Parser:parse_unary()
 	local token = self.current_token
 	if token.type == lexer.TokenType.OPERATOR and (token.value == "-" or token.value == "~") then
@@ -50,6 +58,8 @@ function Parser:parse_unary()
 		}
 	end
 	return self:parse_primary()
+end
+
 function Parser:parse_factor()
 	local left_node = self:parse_unary()
 	local valid_ops = { ["*"] = true, ["/"] = true, ["//"] = true, ["%"] = true }
@@ -66,6 +76,7 @@ function Parser:parse_factor()
 	end
 	return left_node
 end
+
 function Parser:parse_term()
 	local left_node = self:parse_factor()
 	while
@@ -78,6 +89,8 @@ function Parser:parse_term()
 		left_node = { type = "BinaryOpNode", operator = op, left = left_node, right = right_node }
 	end
 	return left_node
+end
+
 function Parser:parse_shift()
 	local left_node = self:parse_term()
 	while
@@ -91,6 +104,7 @@ function Parser:parse_shift()
 	end
 	return left_node
 end
+
 function Parser:parse_bitwise_and()
 	local left_node = self:parse_shift()
 	while self.current_token.type == lexer.TokenType.OPERATOR and self.current_token.value == "&" do
@@ -100,6 +114,7 @@ function Parser:parse_bitwise_and()
 	end
 	return left_node
 end
+
 function Parser:parse_bitwise_xor()
 	local left_node = self:parse_bitwise_and()
 	while self.current_token.type == lexer.TokenType.OPERATOR and self.current_token.value == "^" do
@@ -108,6 +123,8 @@ function Parser:parse_bitwise_xor()
 		left_node = { type = "BinaryOpNode", operator = "^", left = left_node, right = right_node }
 	end
 	return left_node
+end
+
 function Parser:parse_bitwise_or()
 	local left_node = self:parse_bitwise_xor()
 	while self.current_token.type == lexer.TokenType.OPERATOR and self.current_token.value == "|" do
@@ -117,10 +134,14 @@ function Parser:parse_bitwise_or()
 	end
 	return left_node
 end
+
 function Parser:parse_expression()
 	return self:parse_bitwise_or()
 end
+
+function Parser:parse_statement()
 	if self.current_token.type == lexer.TokenType.IDENTIFIER then
+		local var_name = self.current_token.value
 		local next_token = self.tokens[self.pos + 1]
 		if next_token and next_token.type == lexer.TokenType.OPERATOR and next_token.value == "=" then
 			self:eat(lexer.TokenType.IDENTIFIER)
@@ -134,6 +155,8 @@ end
 		end
 	end
 	return self:parse_expression()
+end
+
 local function normalize_literals(instr)
 	local out_str = instr
 	out_str = out_str:gsub("0b([01]+)", function(binary_str)
@@ -141,10 +164,12 @@ local function normalize_literals(instr)
 	end)
 	return out_str
 end
+
 function M.parse(input)
 	local clean_input = normalize_literals(input)
 	local tokens = lexer.tokenize(clean_input)
 	local parser = Parser.new(tokens)
 	return parser:parse_statement()
 end
+
 return M

@@ -1,3 +1,5 @@
+local M = {}
+
 M.TokenType = {
 	NUMBER = "NUMBER",
 	IDENTIFIER = "IDENTIFIER",
@@ -5,16 +7,21 @@ M.TokenType = {
 	LPAREN = "LPAREN",
 	RPAREN = "RPAREN",
 	EOF = "EOF",
+}
+
 function M.tokenize(input)
 	local tokens = {}
 	local pos = 1
 	local len = #input
+
 	local function current()
 		return input:sub(pos, pos)
 	end
+
 	local function advance()
 		pos = pos + 1
 	end
+
 	local function is_space(c)
 		return c:match("%s")
 	end
@@ -27,8 +34,10 @@ function M.tokenize(input)
 	local function is_alnum(c)
 		return c:match("[%w_]")
 	end
+
 	while pos <= len do
 		local c = current()
+
 		if is_space(c) then
 			advance()
 		elseif is_alpha(c) then
@@ -50,6 +59,7 @@ function M.tokenize(input)
 			while pos <= len and is_digit(current()) do
 				advance()
 			end
+			table.insert(tokens, { type = M.TokenType.NUMBER, value = input:sub(start_pos, pos - 1) })
 		elseif c == "(" then
 			table.insert(tokens, { type = M.TokenType.LPAREN, value = "(" })
 			advance()
@@ -62,12 +72,15 @@ function M.tokenize(input)
 			if double_op == "<<" or double_op == ">>" or double_op == "//" then
 				table.insert(tokens, { type = M.TokenType.OPERATOR, value = double_op })
 				pos = pos + 2
+			else
 				table.insert(tokens, { type = M.TokenType.OPERATOR, value = c })
 				advance()
 			end
 		end
 	end
+
 	table.insert(tokens, { type = M.TokenType.EOF, value = "" })
 	return tokens
 end
+
 return M

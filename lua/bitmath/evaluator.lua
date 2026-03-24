@@ -1,6 +1,11 @@
 local bit = require("bit")
+local M = {}
+
+M.variables = {}
+
 local BitNum = {}
 BitNum.__index = BitNum
+
 local function infer_cardinality(value)
 	if value < 0 then
 		return 32
@@ -13,16 +18,23 @@ local function infer_cardinality(value)
 	end
 	return 32
 end
+
 function BitNum.new(value, explicit_cardinality)
 	local self = setmetatable({}, BitNum)
 	self.value = value
 	self.cardinality = explicit_cardinality or infer_cardinality(value)
 	return self
+end
+
+function BitNum:to_hex_string()
 	local hex_digits = math.max(2, math.ceil(self.cardinality / 4))
 	return string.format("0x%0" .. hex_digits .. "X", self.value)
+end
+
 function BitNum:to_bin_string(target_cardinality)
 	local bits = {}
 	local card = target_cardinality or self.cardinality
+
 	for i = card - 1, 0, -1 do
 		local mask = bit.lshift(1, i)
 		if bit.band(self.value, mask) ~= 0 then
@@ -30,15 +42,21 @@ function BitNum:to_bin_string(target_cardinality)
 		else
 			table.insert(bits, "0")
 		end
+
 		if i % 4 == 0 and i ~= 0 then
 			table.insert(bits, " ")
 		end
 	end
+
 	return tostring(card) .. "b " .. table.concat(bits)
+end
+
 function M.evaluate(node)
 	if not node then
 		return nil
 	end
+
+	if node.type == "LiteralNode" then
 		local val = tonumber(node.value)
 		if not val then
 			error("Erro de Execução: Literal inválido '" .. tostring(node.value) .. "'")
@@ -59,12 +77,15 @@ function M.evaluate(node)
 			res_val = bit.bnot(operand.value)
 		else
 			error("Erro de Execução: Operador unário desconhecido '" .. node.operator .. "'")
+		end
 		return BitNum.new(res_val, operand.cardinality)
 	elseif node.type == "BinaryOpNode" then
 		local left = M.evaluate(node.left)
 		local right = M.evaluate(node.right)
 		local res_cardinality = math.max(left.cardinality, right.cardinality)
 		local op = node.operator
+		local res_val
+
 		if op == "+" then
 			res_val = left.value + right.value
 		elseif op == "-" then
@@ -91,10 +112,13 @@ function M.evaluate(node)
 			error("Erro de Execução: Operador binário desconhecido '" .. op .. "'")
 		end
 		return BitNum.new(res_val, res_cardinality)
+	elseif node.type == "AssignmentNode" then
 		local right_val = M.evaluate(node.value_node)
 		M.variables[node.variable] = right_val
 		return right_val
 	end
+
 	error("Erro de Execução: Tipo de nó desconhecido '" .. tostring(node.type) .. "'")
 end
+
 return M
