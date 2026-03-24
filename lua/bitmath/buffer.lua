@@ -29,7 +29,7 @@ local function evaluate_current_line()
 	local virt_lines = {}
 
 	if not success then
-		virt_lines = { { { "  └─ Erro: " .. tostring(result_or_err), "DiagnosticError" } } }
+		virt_lines = { { { "  └─ " .. tostring(result_or_err), "DiagnosticError" } } }
 	elseif result_or_err then
 		local dec = tostring(result_or_err.value)
 		local hex = result_or_err:to_hex_string()
@@ -40,10 +40,7 @@ local function evaluate_current_line()
 		end
 
 		if target_node and target_node.type == "BinaryOpNode" then
-			local left_name = target_node.left.type == "IdentifierNode" and target_node.left.name or "VAL"
-			local right_name = target_node.right.type == "IdentifierNode" and target_node.right.name or "VAL"
 			local op = target_node.operator
-
 			local left_val = evaluator.evaluate(target_node.left)
 			local right_val = evaluator.evaluate(target_node.right)
 			local target_card = result_or_err.cardinality
@@ -52,12 +49,12 @@ local function evaluate_current_line()
 			local right_bin = right_val:to_bin_string(target_card)
 			local res_bin = result_or_err:to_bin_string(target_card)
 
-			local pad = string.rep(" ", 10)
+			local pad = string.rep(" ", 2)
 
 			table.insert(virt_lines, { { string.format("  ├─ %-4s | %-6s", dec, hex), "Comment" } })
-			table.insert(virt_lines, { { string.format("  └─ Mirror: %s (%s)", left_bin, left_name), "String" } })
-			table.insert(virt_lines, { { string.format("%s%2s %s (%s)", pad, op, right_bin, right_name), "String" } })
-			table.insert(virt_lines, { { string.format("%s = %s (RES)", pad, res_bin), "String" } })
+			table.insert(virt_lines, { { string.format("  └─ %s", left_bin), "String" } })
+			table.insert(virt_lines, { { string.format("%s%2s %s", pad, op, right_bin), "String" } })
+			table.insert(virt_lines, { { string.format("%s = %s", pad, res_bin), "String" } })
 		else
 			local bin = result_or_err:to_bin_string()
 			table.insert(virt_lines, { { string.format("  └─ %-4s | %-6s | %s", dec, hex, bin), "Comment" } })
