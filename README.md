@@ -90,4 +90,25 @@ A & MASK
   └─ Mirror: 1010 1010 (A)
            & 0000 1111 (MASK)
            = 0000 1010 (RES)
-`
+```
+
+
+# notes
+
+vou dividir o operador de divisão em 2: / para divisão normal e // para divisão inteira explícita. O programa deverá tratar a divisão com binarios ou hex sempre como divisão inteira 
+
+pipeline de parsing:
+    1. Normalização de literais e operadores específicos
+        - encontra `0b[01]+` e transforma no valor decimal equivalente
+        - encontra // e prepara a transpilação para math.floor(a / b)
+    2. Transpilação de operadores infixos
+        3. Transforma `A & B` em `bit.band(A, B)`
+        4. regex não lida bem com parentesis aninhados, então coisas como `(A & C) | B` será um pesadelo
+    3. A execução
+        4. Passar a string final (`bit.bor(bit.band(A, C), B)`) para o loadstring
+        5. Anexar a tabela de símbolos, onde A B e C estão guardados a essa função usando setfenv. O luaJIT faz o resto
+
+
+Podemos até usar regex para substituir as strings binárias, mas para resolver a ordem das operações vamos ter que criar uma pequena ast com uma fase de lexer (tokenizer) e outra de parser, que consome os tokens e transforma em uma AST. o programa então vai interpretar esta AST, resolver as operações e trasnpilar em uma string. Vai ser ummini compilador mesmo
+
+
