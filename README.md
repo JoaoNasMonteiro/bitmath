@@ -1,61 +1,64 @@
 # bitmath.nvim
 
-**bitmath.nvim** é um REPL (Read-Eval-Print Loop) de baixo nível integrado ao Neovim. Projetado para desenvolvedores de sistemas embarcados, drivers e engenharia reversa, o plugin elimina a necessidade de calculadoras externas ao fornecer um ambiente de cálculo de bits diretamente no editor.
+**bitmath.nvim** is a low-level Read-Eval-Print Loop (REPL) environment integrated directly into Neovim. Designed for embedded systems developers, reverse engineers, driver authors, and anyone that frequetly googles "hex calculator" in the middle of coding. It eliminates the context switch of using external calculators by providing a nice-to-look-at hardware-accurate notebook-style bitwise math environment right in your editor.
 
-## Funcionalidades Principais
+## Key Features
 
-* **Inferência de Cardinalidade**: Diferencia e preserva contextos de 8, 16 e 32 bits automaticamente.
-* **Bit Mirror**: Visualização alinhada verticalmente para operações binárias, facilitando a inspeção de máscaras.
-* **Sintaxe C-Standard**: Suporte a literais hexadecimais (`0x`), binários (`0b` ou `8b`) e decimais, além de operadores como `<<`, `>>`, `&`, `|`, `^`, `~`.
-* **Persistência de Variáveis**: O estado da sessão é mantido, permitindo a definição de variáveis para uso em cálculos complexos.
-* **Integração com Virtual Text**: Resultados exibidos via `extmarks` do Neovim, sem alterar o conteúdo real do buffer.
+* **Bus Width Awareness:** Automatically infers (`0b`) or explicitly forces data widths (`8b`, `16b`, `32b`). Overflows behave like physical registers.
+* **The Bit Mirror:** Vertically aligns binary operations in virtual text, allowing instant visual inspection of bitmasks and shifts.
+* **C-Standard Syntax:** Native support for hex (`0x`), binary, decimal literals, and standard operators (`<<`, `>>`, `&`, `|`, `^`, `~`, `-`).
+ -- Separate into a "nice to have" instead of a front page feature: * **Hardware-Accurate Unary Ops:** Strictly separates arithmetic negation (`-`, 2's complement) from bitwise inversion (`~`, 1's complement) within the defined bus width.
+* **State Persistence:** Assign and reuse variables across operations in the same session.
 
-## Instalação
+## Installation
+
+Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
-    dir = "~/caminho/para/bitmath.nvim",
-    dev = true,
+    "your-username/bitmath.nvim",
     config = function()
         require("bitmath").setup()
     end
 }
 ```
 
-## Como utilizar
+For local development/manual installation, prepend the plugin directory to your `runtimepath` in your `init.lua`.
 
-1. Inicie o REPL com o comando `:BitRepl`. Uma janela lateral será aberta.
-2. Digite sua expressão (ex: `A = 0xAA`).
-3. Pressione `<CR>` (Enter). O comando funciona tanto no modo Normal quanto no modo de Inserção.
-4. O resultado será exibido imediatamente abaixo da linha digitada.
+## Usage
 
-### Atalhos no Buffer BitMath
-* `<CR>`: Avalia a linha atual, exibe o resultado e avança para a próxima linha.
-* `:BitRepl`: Abre ou fecha a janela do REPL (Toggle).
+1. Open the REPL using the `:BitMath` command.
+2. Type your expression (e.g., `MASK = 0xFF00`).
+3. Press `<CR>` (in Normal or Insert mode) to evaluate and advance to the next line.
+4. The result renders instantly as Virtual Text.
 
-## O Bit Mirror
+### Default Keymaps
+* `<leader>bm`: Toggle BitMath window
+* `<leader>be`: Show all variables in Memory
 
-O diferencial técnico do plugin é a renderização do espelho de bits em operações binárias, garantindo o alinhamento perfeito dos operandos e do resultado.
+## The Bit Mirror
 
-**Exemplo de Saída:**
-```text
-A & MASK
-  ├─ 10   | 0x0A
-  └─ Mirror: 8b 1010 1010 (A)
-           & 8b 0000 1111 (MASK)
-           = 8b 0000 1010 (RES)
+The core visual feature of the plugin. When executing binary operations, `bitmath.nvim` renders a perfectly aligned mirror of the operands, making mask validation effortless.
+
+**Input:**
+```c
+REG = 0xDEAF
+MSK = 16b1111111100000000
+REG & MSK
 ```
 
-## Arquitetura e Implementação
+**Output:**
+```text
+REG & MSK
+  ├─ 57088 | 0xDF00
+  └─ 16b 1101 1110 1010 1111
+   & 16b 1111 1111 0000 0000
+   = 16b 1101 1111 0000 0000
+```
 
-O projeto foi construído seguindo fundamentos de engenharia de compiladores para garantir precisão e extensibilidade:
-* **Recursive Descent Parser**: Implementação manual de um parser para lidar com precedência de operadores e expressões aninhadas.
-* **Abstract Syntax Tree (AST)**: As expressões são convertidas em uma árvore lógica antes da avaliação, permitindo que a camada de UI inspecione os operandos e gere o Bit Mirror de forma inteligente.
-* **LuaJIT Bit Library**: Utiliza a biblioteca nativa de baixo nível do Neovim para operações de manipulação de bits.
+## Architecture
 
-## Desenvolvimento Assistido por IA
-
-Este projeto foi desenvolvido com o auxílio de modelos de Inteligência Artificial para a geração de código e aceleração da implementação. No entanto, é importante ressaltar que toda a arquitetura de software, a lógica de precedência do parser, o gerenciamento de memória dos buffers e a integração com a API C do Neovim foram revisadas, corrigidas e testadas manualmente por um humano.
-
-A IA atuou como uma ferramenta de assistência técnica, enquanto a validação final, o debugging e a garantia de estabilidade foram realizados de forma autoral para assegurar que o plugin seja confiável em ambientes de produção.
-
+This plugin is built on compiler engineering fundamentals rather than naive string evaluation:
+* **Recursive Descent Parser:** A custom lexer and parser handle operator precedence and nested expressions natively.
+* **Abstract Syntax Tree (AST):** Expressions are compiled into a tree format, allowing the UI layer to intelligently extract operands for the Bit Mirror.
+* **LuaJIT BitOp:** Leverages Neovim's native low-level bitwise library for performance and accuracy.

@@ -61,7 +61,7 @@ function M.evaluate(node)
 	elseif node.type == "IdentifierNode" then
 		local val = M.variables[node.name]
 		if not val then
-			error("Erro de Execução: Variável '" .. node.name .. "' não declarada.")
+			error("Error: Variable: '" .. node.name .. "' Undeclared.")
 		end
 		return val
 	elseif node.type == "UnaryOpNode" then
@@ -72,7 +72,7 @@ function M.evaluate(node)
 		elseif node.operator == "~" then
 			res_val = bit.bnot(operand.value)
 		else
-			error("Erro de Execução: Operador unário desconhecido '" .. node.operator .. "'")
+			error("Error: Unknown Unary Operator '" .. node.operator .. "'")
 		end
 		return BitNum.new(res_val, operand.cardinality)
 	elseif node.type == "BinaryOpNode" then
@@ -105,7 +105,7 @@ function M.evaluate(node)
 		elseif op == ">>" then
 			res_val = bit.rshift(left.value, right.value)
 		else
-			error("Erro de Execução: Operador binário desconhecido '" .. op .. "'")
+			error("Error: Unknown Binary Operator '" .. op .. "'")
 		end
 		return BitNum.new(res_val, res_cardinality)
 	elseif node.type == "AssignmentNode" then
@@ -114,7 +114,7 @@ function M.evaluate(node)
 		return right_val
 	end
 
-	error("Erro de Execução: Tipo de nó desconhecido '" .. tostring(node.type) .. "'")
+	error("Error: Unknown Node Type '" .. tostring(node.type) .. "'")
 end
 
 return M

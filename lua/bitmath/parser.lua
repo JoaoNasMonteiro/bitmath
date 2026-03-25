@@ -25,112 +25,44 @@ function Parser:eat(expected_type)
 		self:advance()
 		return token
 	else
-		error("Erro de Sintaxe: Esperado " .. expected_type .. ", mas recebido " .. self.current_token.type)
+		error("Error: Expected " .. expected_type .. ", but recieved " .. self.current_token.type)
 	end
 end
 
 function Parser:parse_primary()
-    local token = self.current_token
-    if token.type == lexer.TokenType.NUMBER then
-        self:eat(lexer.TokenType.NUMBER)
-        
-        local val_str = token.value
-        local final_val = 0
-        local explicit_card = nil
+	local token = self.current_token
+	if token.type == lexer.TokenType.NUMBER then
+		self:eat(lexer.TokenType.NUMBER)
 
-        if val_str:match("b") then
-            local card_part, bin_part = val_str:match("(%d*)b([01]+)")
-            final_val = tonumber(bin_part, 2)
-            
-            local card_num = tonumber(card_part)
-            if card_num and card_num > 0 then
-                explicit_card = card_num
-            end
-        else
-            final_val = tonumber(val_str)
-        end
+		local val_str = token.value:lower()
+		local final_val = 0
+		local explicit_card = nil
 
-        return { 
-            type = "LiteralNode", 
-            value = final_val, 
-            explicit_cardinality = explicit_card 
-        }
-    elseif token.type == lexer.TokenType.IDENTIFIER then
-        self:eat(lexer.TokenType.IDENTIFIER)
-        return { type = "IdentifierNode", name = token.value }
-    elseif token.type == lexer.TokenType.LPAREN then
-        self:eat(lexer.TokenType.LPAREN)
-        local node = self:parse_expression()
-        self:eat(lexer.TokenType.RPAREN)
-        return node
-    end
-    error("Erro de Sintaxe: Token inesperado '" .. token.value .. "'")
-end
+		if val_str:match("^0x") then
+			final_val = tonumber(val_str)
+		elseif val_str:match("b") then
+			local card_part, bin_part = val_str:match("^(%d*)b([01]*)$")
+			if not bin_part or bin_part == "" then
+				error("Error: Malformed Binary Literal '" .. token.value .. "'")
+			end
+			final_val = tonumber(bin_part, 2)
+			local card_num = tonumber(card_part)
+			if card_num and card_num > 0 then
+				explicit_card = card_num
+			end
+		else
+			final_val = tonumber(val_str)
+		end
 
-function Parser:parse_statement()
-    if self.current_token.type == lexer.TokenType.IDENTIFIER then
-        local var_name = self.current_token.value
-        local next_token = self.tokens[self.pos + 1]
-        
-        if next_token and next_token.type == lexer.TokenType.OPERATOR and next_token.value == "=" then
-            self:eat(lexer.TokenType.IDENTIFIER)
-            self:eat(lexer.TokenType.OPERATOR)
-            local right_node = self:parse_expression()
-            return {
-                type = "AssignmentNode",
-                variable = var_name,
-                value_node = right_node,
-            }
-        end
-    end
-    return self:parse_expression()
-end
-function Parser:parse_statement()
-    if self.current_token.type == lexer.TokenType.IDENTIFIER then
-        local var_name = self.current_token.value
-        local next_token = self.tokens[self.pos + 1]
-        
-        if next_token and next_token.type == lexer.TokenType.OPERATOR and next_token.value == "=" then
-            self:eat(lexer.TokenType.IDENTIFIER)
-            self:eat(lexer.TokenType.OPERATOR)
-            local right_node = self:parse_expression()
-            return {
-                type = "AssignmentNode",
-                variable = var_name,
-                value_node = right_node,
-            }
-        end
-    end
-    return self:parse_expression()
-end
-function Parser:parse_primary()
-    local token = self.current_token
-    if token.type == lexer.TokenType.NUMBER then
-        self:eat(lexer.TokenType.NUMBER)
-        
-        local val_str = token.value
-        local final_val = 0
-        local explicit_card = nil
+		if not final_val then
+			error("Error: Invalid Number '" .. token.value .. "'")
+		end
 
-        if val_str:match("b") then
-            -- Trata binários: "8b1010" ou "0b1010"
-            local card_part, bin_part = val_str:match("(%d*)b([01]+)")
-            final_val = tonumber(bin_part, 2)
-            
-            local card_num = tonumber(card_part)
-            if card_num and card_num > 0 then
-                explicit_card = card_num
-            end
-        else
-            -- Trata Hex (0x) ou Decimal
-            final_val = tonumber(val_str)
-        end
-
-        return { 
-            type = "LiteralNode", 
-            value = final_val, 
-            explicit_cardinality = explicit_card 
-        }
+		return {
+			type = "LiteralNode",
+			value = final_val,
+			explicit_cardinality = explicit_card,
+		}
 	elseif token.type == lexer.TokenType.IDENTIFIER then
 		self:eat(lexer.TokenType.IDENTIFIER)
 		return { type = "IdentifierNode", name = token.value }
@@ -140,7 +72,7 @@ function Parser:parse_primary()
 		self:eat(lexer.TokenType.RPAREN)
 		return node
 	end
-	error("Erro de Sintaxe: Token inesperado '" .. token.value .. "'")
+	error("Error: Unexpected Token '" .. token.value .. "'")
 end
 
 function Parser:parse_unary()
@@ -253,7 +185,6 @@ function Parser:parse_statement()
 	end
 	return self:parse_expression()
 end
-
 
 function M.parse(input)
 	local tokens = lexer.tokenize(input)
