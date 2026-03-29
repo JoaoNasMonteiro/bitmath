@@ -1,4 +1,4 @@
-*bitmath.txt*          For Neovim >= 0.8.0          Last change: 2026 March 25
+*bitmath.txt*          For Neovim >= 0.8.0          Last change: 2026 March 29
 
 ==============================================================================
 Table of Contents                                  *bitmath-table-of-contents*
@@ -36,7 +36,7 @@ Using lazy.nvim <https://github.com/folke/lazy.nvim>:
 
 >lua
     {
-        "your-username/bitmath.nvim",
+        "JoaoNasMonteiro/bitmath.nvim",
         config = function()
             require("bitmath").setup()
         end
