@@ -16,7 +16,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
-    "your-username/bitmath.nvim",
+    "JoaoNasMonteiro/bitmath.nvim",
     config = function()
         require("bitmath").setup()
     end
