@@ -7,7 +7,6 @@
 * **Bus Width Awareness:** Automatically infers (`0b`) or explicitly forces data widths (`8b`, `16b`, `32b`). Overflows behave like physical registers.
 * **The Bit Mirror:** Vertically aligns binary operations in virtual text, allowing instant visual inspection of bitmasks and shifts.
 * **C-Standard Syntax:** Native support for hex (`0x`), binary, decimal literals, and standard operators (`<<`, `>>`, `&`, `|`, `^`, `~`, `-`).
- -- Separate into a "nice to have" instead of a front page feature: * **Hardware-Accurate Unary Ops:** Strictly separates arithmetic negation (`-`, 2's complement) from bitwise inversion (`~`, 1's complement) within the defined bus width.
 * **State Persistence:** Assign and reuse variables across operations in the same session.
 
 ## Installation
@@ -22,8 +21,6 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
     end
 }
 ```
-
-For local development/manual installation, prepend the plugin directory to your `runtimepath` in your `init.lua`.
 
 ## Usage
 
